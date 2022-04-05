@@ -1,0 +1,13 @@
+[
+    {
+        "name": "Freddy",
+        "age": 28,
+        "married": false,
+        "address": {
+            "street": "Rathausstr.",
+            "zipCode": "12345",
+            "country": "DE",
+            "city": "Lazytown"
+        }
+    }
+]
