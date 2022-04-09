@@ -2,52 +2,79 @@ console.log('Hello World! says "app.js"');
 
 const externalSourcePath = './employees.json';
 
-const getEmployeesFromDatabase = async () => {
-    const response = await fetch(externalSourcePath);
+const restApi = 'https://cors-anywhere.herokuapp.com/https://www.postdirekt.de/plzserver/PlzAjaxServlet';
+
+const ok = '//www.postdirekt.de/plzserver/PlzAjaxServlet';
+
+const fetchCities = async (zipCode) => {
+    const response = await fetch(ok, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+        },
+        body: `finda=city&city=${zipCode}&lang=de_DE`
+    });
     const bodyOfResponse = await response.json();
     return bodyOfResponse;
 }
 
-let employees;
+const datalist = document.querySelector('datalist#suggestions-city');
 
-const init = async () => {
-    console.time('Fetch Employees-Database');
-    employees = await getEmployeesFromDatabase();
-    console.timeEnd('Fetch Employees-Database');
-    console.log(employees);
+const createOption = (zipCode, city) => {
+    const opt = document.createElement('option');
+    opt.value = zipCode;
+    opt.textContent = city;
+    return opt;
 }
 
-init();
-
-const addEmployeeToDatabase = async (employee) => {
-    const response = await fetch(externalSourcePath, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(employee)
-    });
-    return response;
+const updateDatalist = arr => {
+    // Clear
+    datalist.innerHTML = '';
+    // Append option(s)
+    arr.forEach(item => {
+        const zipCode = item.plz;
+        const city = item.city;
+        const opt = createOption(zipCode, city);
+        datalist.append(opt);
+    })
 }
 
-const registerNewEmployee = async () => {
-    const newEmployee = {
-        "name": "Max",
-        "age": 41,
-        "married": true,
-        "address": {
-            "street": "Karl-Marx-Straße",
-            "zipCode": "56789",
-            "country": "DE",
-            "city": "Gießheim"
+const synchronizeDatalist = async () => {
+
+    const zipCode = document.getElementById("zip-code").value;
+    const length = document.getElementById("zip-code").value.length;
+
+    if (length == 3 || length == 4) {
+
+        // Fetch & initializie rows
+        const bodyOfResponse = await fetchCities(zipCode);
+        const rows = bodyOfResponse.rows;
+
+        // Display them correctly
+        if (rows) updateDatalist(rows);
+        else datalist.innerHTML = '';
+
+    } else {
+        datalist.innerHTML = '';
+    }
+}
+
+const autofill = () => {
+
+    const length = document.getElementById("zip-code").value.length;
+
+    if (length == 5) {
+
+        const zipCode = document.getElementById("zip-code").value;
+        const opts = document.getElementById('suggestions-city').childNodes;
+
+        for (let i = 0; i < opts.length; i++) {
+            if (opts[i].value === zipCode) {
+                // An item was selected from the list!
+                console.log(opts[i].textContent);
+                break;
+            }
         }
-    };
 
-    const response = await addEmployeeToDatabase(newEmployee);
-    console.log(response);
+    }
 }
-
-// setTimeout that the console.logs dont get mixed
-setTimeout(() => {
-    registerNewEmployee();
-}, 1000)
