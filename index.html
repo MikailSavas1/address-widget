@@ -12,26 +12,6 @@
 
     <address-widget></address-widget>
 
-    
-
-    <br>
-    <br>
-    <br>
-
-    <label for="zip-code">PLZ</label>
-    <input 
-    id="zip-code" 
-    name="zipCode"
-    type="number"
-    list="suggestions-city"
-    placeholder="12345"
-    onKeyPress="if(this.value.length >= 5) return false;"
-    oninput="autofill()"
-    onkeyup="synchronizeDatalist()"
-    min="0">
-
-    <datalist id="suggestions-city"></datalist>
-
     <script src="address-widget.class.js"></script>
     <script src="app.js"></script>
 </body>

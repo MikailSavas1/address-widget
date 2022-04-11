@@ -17,39 +17,10 @@ class AddressWidget extends HTMLElement {
         // Create a shadow root
         this.attachShadow({ mode: 'open' });
 
-
-        // Create wrapper
-        const container = document.createElement('div');
-        // Create label
-        const label = this.createLabel('zip-code', 'PLZ');
-        // Create input
-        const input = document.createElement('input');
-        // character
-        input.setAttribute('type', 'number');
-        input.setAttribute('id', 'zip-code');
-        input.setAttribute('name', 'zip-code');
-        input.setAttribute('list', 'suggestions-city');
-        input.setAttribute('placeholder', '12345');
-        // validation
-        input.setAttribute('min', '0');
-        input.setAttribute('onKeyPress', 'if(this.value.length >= 5) return false;');
-        // functionallity
-        input.addEventListener('keyup', () => {
-            this.synchronizeDatalist();
-        });
-        input.addEventListener('input', (event) => {
-            // Binding
-            this.zipCode = event.target.value;
-            // if (this.zipCode.length == 5) this.autofillCity();
-        });
-
-        // Create datalist
-        const datalist = this.createDatalist('suggestions-city');
-
-        // Attach children to container
-        container.append(label, input, datalist);
-
-
+        // Create all form-groups
+        const formGroups = [
+            this.createFormGroup('zip-code')
+        ];
 
         // Link external css
         const linkElement = document.createElement('link');
@@ -57,11 +28,12 @@ class AddressWidget extends HTMLElement {
         linkElement.href = this.EXTERNAL_SOURCE_PATH.css;
 
         // Attach the created elements to the shadow DOM
-        this.shadowRoot.append(linkElement, container);
+        this.shadowRoot.append(linkElement);
+        formGroups.forEach(formGroup => this.shadowRoot.append(formGroup));
 
         // Init
         this.DATALIST = this.shadowRoot.querySelector('datalist#suggestions-city');
-        // this.zip = this.shadowRoot.querySelector('#zip-code').value;
+        this.zipCode = '';
     }
 
     async fetchCities(zipCode) {
@@ -78,52 +50,63 @@ class AddressWidget extends HTMLElement {
 
     async synchronizeDatalist() {
 
-        const length = this.zipCode.length;
+        // Fetch & initializie rows
+        const bodyOfResponse = await this.fetchCities(this.zipCode);
+        const rows = bodyOfResponse.rows;
 
-        if (length == 3 || length == 4) {
-
-            // Fetch & initializie rows
-            const bodyOfResponse = await this.fetchCities(this.zipCode);
-            const rows = bodyOfResponse.rows;
-
-            // Display them correctly
-            if (rows) this.updateDatalist(rows);
-            else this.DATALIST.innerHTML = '';
-
-        }
-        else if (length == 5) {
-            this.autofillCity();
-        }
+        // Display them correctly
+        if (rows) this.updateDatalist(rows);
         else this.DATALIST.innerHTML = '';
 
     }
 
-    autofillCity() {
+    updateDatalist(fetchedArray) {
 
-        const opts = this.DATALIST.childNodes;
+        // Create a Set, avoid displaying dublicates
+        let array = [];
+        fetchedArray.forEach(cityObj => {
+            array.push(`${cityObj.plz} - ${cityObj.city}`);
+        })
+        const set = new Set(array);
 
-        for (let i = 0; i < opts.length; i++) {
-            if (opts[i].value === this.zipCode && opts[i].getAttribute('id') == 3) {
-                // An item was selected from the list!
-                // TODO
-                // ...
-                console.log(opts[i].textContent);
-                break;
-            }
-        }
-
-    }
-
-    updateDatalist(arr) {
         // Clear
         this.DATALIST.innerHTML = '';
-        // Append option(s)
-        arr.forEach((item, index) => {
-            const zipCode = item.plz;
-            const city = item.city;
-            const opt = this.createOption(zipCode, city, index);
+
+        // Append option(s) to datalist
+        set.forEach(item => {
+            const zipCode = item.split(' - ')[0];
+            const city = item.split(' - ')[1];
+            const opt = this.createOption(zipCode, city);
             this.DATALIST.append(opt);
         })
+    }
+
+    autofillCity(inputfield, datalist) {
+
+        const input = inputfield;
+        const value = input.value; // e.g. "78532 - Tuttlingen" || "78532"
+
+        // Split & seperate data
+        let city = value.split(' - ')[1] ? value.split(' - ')[1] : 'NONE CITY CHOOSEN FROM DATALIST';
+        // Initialize zip-code
+        input.value = value.split(' - ')[0];
+
+        if (city == 'NONE CITY CHOOSEN FROM DATALIST') {
+
+            const filteredDatalist = datalist.filter(optionValue => optionValue.split(' - ')[0] == this.zipCode);
+
+            if (filteredDatalist.length == 1) {
+                // Initialize city
+                city = filteredDatalist[0].split(' - ')[1];
+                this.DATALIST.innerHTML = '';
+            }
+            else city = 'BULLSHIT';
+
+        } else this.DATALIST.innerHTML = '';
+
+
+        if (city != 'BULLSHIT') console.log(city);
+
     }
 
     createDatalist(id) {
@@ -132,11 +115,10 @@ class AddressWidget extends HTMLElement {
         return datalist;
     }
 
-    createOption(zipCode, city, index) {
+    createOption(zipCode, city) {
         const opt = document.createElement('option');
-        opt.value = zipCode;
-        opt.textContent = city;
-        opt.setAttribute('id', index);
+        const splitString = ' - ';
+        opt.value = `${zipCode}${splitString}${city}`;
         return opt;
     }
 
@@ -145,6 +127,66 @@ class AddressWidget extends HTMLElement {
         label.setAttribute('for', forValue);
         label.textContent = textContent;
         return label;
+    }
+
+    createFormGroup(text) {
+        switch (text) {
+            case 'zip-code':
+                const formGroup = document.createElement('div');
+                // Create label
+                const label = this.createLabel('zip-code', 'PLZ');
+                // Create input
+                const input = document.createElement('input');
+                input.setAttribute('type', 'text');
+                input.setAttribute('id', 'zip-code');
+                input.setAttribute('name', 'zip-code');
+                input.setAttribute('list', 'suggestions-city');
+                input.setAttribute('placeholder', '12345');
+                // validation
+                input.setAttribute('onKeyPress', 'if(this.value.length < 5) return (/^[0-9]$/.test(event.key)); else return false');
+                // functionallity
+                input.addEventListener('keyup', (event) => {
+
+                    // Get
+                    const inputfield = event.target;
+                    const value = inputfield.value; // e.g. "78532 - Tuttlingen"
+                    const zipCode = value.split(' - ')[0];
+                    const length = zipCode.length;
+
+                    // (Global) Binding
+                    this.zipCode = zipCode;
+
+                    if (length == 3 || length == 4) {
+                        this.synchronizeDatalist();
+                    }
+                    else if (length == 5) {
+                        // Get options of datalist
+                        // Convert to a custom array with the suggestion-values, because filter is not provided in the array of (node)object
+                        let options = [];
+                        this.DATALIST.childNodes.forEach(item => {
+                            const zipCode = item.value.split(' - ')[0];
+                            const city = item.value.split(' - ')[1];
+                            options.push(`${zipCode} - ${city}`);
+                        })
+                        this.autofillCity(inputfield, options);
+                    }
+                    else {
+                        this.DATALIST.innerHTML = '';
+                    }
+
+                });
+
+                // Create datalist
+                const datalist = this.createDatalist('suggestions-city');
+
+                // Attach children to container
+                formGroup.append(label, input, datalist);
+
+                return formGroup;
+
+            default:
+                break;
+        }
     }
 }
 
