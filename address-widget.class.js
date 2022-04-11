@@ -19,7 +19,8 @@ class AddressWidget extends HTMLElement {
 
         // Create all form-groups
         const formGroups = [
-            this.createFormGroup('zip-code')
+            this.createFormGroup('zip-code'),
+            this.createFormGroup('city')
         ];
 
         // Link external css
@@ -105,7 +106,7 @@ class AddressWidget extends HTMLElement {
         } else this.DATALIST.innerHTML = '';
 
 
-        if (city != 'BULLSHIT') console.log(city);
+        if (city != 'BULLSHIT') this.setCity(city);
 
     }
 
@@ -129,14 +130,24 @@ class AddressWidget extends HTMLElement {
         return label;
     }
 
-    createFormGroup(text) {
-        switch (text) {
+    createFormGroup(name) {
+
+        let formGroup;
+        let label;
+        let input;
+
+        switch (name) {
             case 'zip-code':
-                const formGroup = document.createElement('div');
+
+                // Create container
+                formGroup = document.createElement('div');
+
                 // Create label
-                const label = this.createLabel('zip-code', 'PLZ');
+                label = this.createLabel('zip-code', 'PLZ');
+
                 // Create input
-                const input = document.createElement('input');
+                input = document.createElement('input');
+                // characteristic
                 input.setAttribute('type', 'text');
                 input.setAttribute('id', 'zip-code');
                 input.setAttribute('name', 'zip-code');
@@ -153,7 +164,7 @@ class AddressWidget extends HTMLElement {
                     const zipCode = value.split(' - ')[0];
                     const length = zipCode.length;
 
-                    // (Global) Binding
+                    // Binding
                     this.zipCode = zipCode;
 
                     if (length == 3 || length == 4) {
@@ -184,9 +195,38 @@ class AddressWidget extends HTMLElement {
 
                 return formGroup;
 
+            case 'city':
+
+                // Create container
+                formGroup = document.createElement('div');
+
+                // Create label
+                label = this.createLabel('city', 'Stadt');
+
+                // Create input
+                input = document.createElement('input');
+                // characteristic
+                input.setAttribute('type', 'text');
+                input.setAttribute('id', 'city');
+                input.setAttribute('name', 'city');
+                input.setAttribute('placeholder', 'Musterstadt');
+                // validation
+                input.setAttribute('onKeyPress', 'return (!/^[0-9]$/.test(event.key))');
+                input.setAttribute('maxlength', '32');
+
+                // Attach children to container
+                formGroup.append(label, input);
+
+                return formGroup;
             default:
                 break;
         }
+    }
+
+    setCity(city) {
+        const input = this.shadowRoot.querySelector('#city');
+        // Initialize city
+        input.value = city;
     }
 }
 
