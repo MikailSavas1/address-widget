@@ -23,7 +23,9 @@ class AddressWidget extends HTMLElement {
         const formGroups = [
             this.createFormGroup('zip-code'),
             this.createFormGroup('city'),
-            this.createFormGroup('street')
+            this.createFormGroup('street'),
+            this.createFormGroup('house-number'),
+            this.createFormGroup('country')
         ];
 
         // Link external css
@@ -82,7 +84,7 @@ class AddressWidget extends HTMLElement {
 
     async synchronizeDatalistStreets(city, street) {
 
-        // Fetch
+        // Fetch & initializie rows
         const bodyOfResponse = await this.fetchStreets(city, street);
         const rows = bodyOfResponse.rows;
         const count = bodyOfResponse.count;
@@ -141,7 +143,7 @@ class AddressWidget extends HTMLElement {
         if (city == 'NONE CITY CHOOSEN FROM DATALIST') {
 
             // DETECT, WHETHER DATALIST (OF CITIES) IS DISPLAYING EXACTLY 1 OPTION. ONLY THEN AUTOCOMPLETE
-            
+
             // Get options of datalist & add them to a custom array with only the suggestion-values, because filter is not provided in the array of (node)object
             // IT IS NECESSARY BECAUSE A ZIPCODE E.G. "17337" CAN HAVE DIFFERENT POSSIBLES CITIES TO CHOOSE AT THE SAME ZIP
             // THEREFORE WE SHOULDNT AUTOFILL ANY UNWANTED VALUE AND LET THE USER CHOOSE!
@@ -215,7 +217,7 @@ class AddressWidget extends HTMLElement {
                 // characteristic
                 input.setAttribute('type', 'text');
                 input.setAttribute('id', 'zip-code');
-                input.setAttribute('name', 'zip-code');
+                input.setAttribute('name', 'zipCode');
                 input.setAttribute('list', 'suggestions-cities');
                 input.setAttribute('placeholder', '12345');
                 // validation
@@ -274,7 +276,7 @@ class AddressWidget extends HTMLElement {
                 formGroup = document.createElement('div');
 
                 // Create label
-                label = this.createLabel('city', 'Straße');
+                label = this.createLabel('street', 'Straße');
 
                 // Create input
                 input = document.createElement('input');
@@ -315,8 +317,48 @@ class AddressWidget extends HTMLElement {
                 formGroup.append(label, input, datalist);
 
                 return formGroup;
-            default:
-                break;
+
+            case 'house-number':
+
+                // Create container
+                formGroup = document.createElement('div');
+
+                // Create label
+                label = this.createLabel('house-number', 'Hausnummer');
+
+                // Create input
+                input = document.createElement('input');
+                input.setAttribute('type', 'text');
+                input.setAttribute('id', 'house-number');
+                input.setAttribute('name', 'houseNumber');
+                input.setAttribute('placeholder', '86f');
+                input.setAttribute('maxlength', '15');
+
+                // Attach children to container
+                formGroup.append(label, input);
+
+                return formGroup;
+
+            case 'country':
+
+                // Create container
+                formGroup = document.createElement('div');
+
+                // Create label
+                label = this.createLabel('country', 'Land');
+
+                // Create input
+                input = document.createElement('input');
+                input.setAttribute('type', 'text');
+                input.setAttribute('id', 'country');
+                input.setAttribute('name', 'country');
+                input.setAttribute('value', 'Deutschland');
+                input.setAttribute('readonly', '');
+
+                // Attach children to container
+                formGroup.append(label, input);
+
+                return formGroup;
         }
     }
 
