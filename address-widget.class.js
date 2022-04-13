@@ -127,7 +127,7 @@ class AddressWidget extends HTMLElement {
 
     }
 
-    autofillCity(datalist) {
+    autofillCity() {
 
         const value = this.INPUTFIELD.ZIPCODE.value; // e.g. "78532 - Tuttlingen" || "78532"  --> SPLIT & SEPERATE DATA
 
@@ -140,7 +140,24 @@ class AddressWidget extends HTMLElement {
 
         if (city == 'NONE CITY CHOOSEN FROM DATALIST') {
 
-            const filteredDatalist = datalist.filter(optionValue => optionValue.split(' - ')[0] == this.zipCode);
+            // DETECT, WHETHER DATALIST (OF CITIES) IS DISPLAYING EXACTLY 1 OPTION. ONLY THEN AUTOCOMPLETE
+            
+            // Get options of datalist & add them to a custom array with only the suggestion-values, because filter is not provided in the array of (node)object
+            // IT IS NECESSARY BECAUSE A ZIPCODE E.G. "17337" CAN HAVE DIFFERENT POSSIBLES CITIES TO CHOOSE AT THE SAME ZIP
+            // THEREFORE WE SHOULDNT AUTOFILL ANY UNWANTED VALUE AND LET THE USER CHOOSE!
+            // FILTER IS NOT PROVIDED IN THAT ARRAY OF NODE OBJECTS UNFORTUNATELY, THEREFORE WE CREATE A CUSTOMIZED DATALIST ADDED BY THE OPTION VALUES AS STRINGS
+            let customizedDatalist = []; // :string[] e.g. ['78532 - Tuttlingen']
+            this
+                .DATALIST
+                .CITIES
+                .childNodes
+                .forEach(item => {
+                    const zipCode = item.value.split(' - ')[0];
+                    const city = item.value.split(' - ')[1];
+                    customizedDatalist.push(`${zipCode} - ${city}`);
+                })
+
+            const filteredDatalist = customizedDatalist.filter(optionValue => optionValue.split(' - ')[0] == this.zipCode);
 
             if (filteredDatalist.length == 1) {
                 const option = filteredDatalist[0];
@@ -214,30 +231,9 @@ class AddressWidget extends HTMLElement {
                     // Binding
                     this.zipCode = zipCode;
 
-                    if (length == 3 || length == 4) {
-                        this.synchronizeDatalistCities();
-                    }
-                    else if (length == 5) {
-                        // Get options of datalist & Convert to a custom array with the suggestion-values, because filter is not provided in the array of (node)object
-                        // IT IS NECESSARY BECAUSE A ZIPCODE E.G. "17337" CAN HAVE DIFFERENT POSSIBLES CITIES TO CHOOSE AT THE SAME ZIP
-                        // THEREFORE WE SHOULDNT AUTOFILL ANY UNWANTED VALUE AND LET USER CHOOSE!
-                        // FILTER IS NOT PROVIDED IN THAT ARRAY OF NODE OBJECTS UNFORTUNATELY
-                        let options = [];
-                        this
-                            .DATALIST
-                            .CITIES
-                            .childNodes
-                            .forEach(item => {
-                                const zipCode = item.value.split(' - ')[0];
-                                const city = item.value.split(' - ')[1];
-                                options.push(`${zipCode} - ${city}`);
-                            })
-                        this.autofillCity(options);
-                    }
-                    else {
-                        this.clearDatalist(this.DATALIST.CITIES);;
-                    }
-
+                    if (length == 3 || length == 4) this.synchronizeDatalistCities();
+                    else if (length == 5) this.autofillCity();
+                    else this.clearDatalist(this.DATALIST.CITIES);
                 });
 
                 // Create datalist
