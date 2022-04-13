@@ -28,6 +28,22 @@ class AddressWidget extends HTMLElement {
             this.createFormGroup('country')
         ];
 
+        // Create button
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = 'Info';
+        button.addEventListener('click', () => {
+            alert('Output in the console!')
+            const address = {
+                zip: this.INPUTFIELD.ZIPCODE.value,
+                city: this.INPUTFIELD.CITY.value,
+                street: this.INPUTFIELD.STREET.value,
+                houseNumber: this.INPUTFIELD.HOUSENUMBER.value,
+                country: this.INPUTFIELD.COUNTRY.value,
+            }
+            console.table(address);
+        })
+
         // Link external css
         const linkElement = document.createElement('link');
         linkElement.rel = 'stylesheet';
@@ -36,18 +52,21 @@ class AddressWidget extends HTMLElement {
         // Attach the created elements to the shadow DOM
         this.shadowRoot.append(linkElement);
         formGroups.forEach(formGroup => this.shadowRoot.append(formGroup));
+        this.shadowRoot.append(button);
 
         // Init
-        this.zipCode = '';
         this.INPUTFIELD = {
             ZIPCODE: this.shadowRoot.querySelector('input#zip-code'),
             CITY: this.shadowRoot.querySelector('input#city'),
-            STREET: this.shadowRoot.querySelector('input#street')
+            STREET: this.shadowRoot.querySelector('input#street'),
+            HOUSENUMBER: this.shadowRoot.querySelector('input#house-number'),
+            COUNTRY: this.shadowRoot.querySelector('input#country')
         };
         this.DATALIST = {
             CITIES: this.shadowRoot.querySelector('datalist#suggestions-cities'),
             STREETS: this.shadowRoot.querySelector('datalist#suggestions-streets')
         }
+        this.zipCode = '';
 
         // ...
     }
