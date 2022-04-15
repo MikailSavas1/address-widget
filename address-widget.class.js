@@ -1,8 +1,6 @@
 class AddressWidget extends HTMLElement {
 
-    zipCode;
-    city;
-    street;
+    tmpl;
 
     EXTERNAL_SOURCE_PATH = {
         css: 'address-widget.css'
@@ -54,6 +52,9 @@ class AddressWidget extends HTMLElement {
         formGroups.forEach(formGroup => this.shadowRoot.append(formGroup));
         this.shadowRoot.append(button);
 
+        // Create Template
+        this.tmpl = document.createElement('template');
+
         // Init
         this.INPUTFIELD = {
             ZIPCODE: this.shadowRoot.querySelector('input#zip-code'),
@@ -66,9 +67,19 @@ class AddressWidget extends HTMLElement {
             CITIES: this.shadowRoot.querySelector('datalist#suggestions-cities'),
             STREETS: this.shadowRoot.querySelector('datalist#suggestions-streets')
         }
-        this.zipCode = '';
 
-        // ...
+    }
+
+    /**
+     *  ConnectedCallback is invoked each time the custom element is appended into a document-connected element
+     */
+    connectedCallback() {
+        fetch('../address-widget.component.html')
+            .then(r => r.text())
+            .then(t => {
+                this.tmpl.innerHTML = t;
+                this.shadowRoot.append(this.tmpl.content.cloneNode(true));
+            });
     }
 
     async fetchCities(zipCode) {
@@ -89,10 +100,10 @@ class AddressWidget extends HTMLElement {
         return bodyOfResponse;
     }
 
-    async synchronizeDatalistCities() {
+    async synchronizeDatalistCities(zipCode) {
 
         // Fetch & initializie rows
-        const bodyOfResponse = await this.fetchCities(this.zipCode);
+        const bodyOfResponse = await this.fetchCities(zipCode);
         const rows = bodyOfResponse.rows;
 
         // Display them correctly
@@ -178,7 +189,8 @@ class AddressWidget extends HTMLElement {
                     customizedDatalist.push(`${zipCode} - ${city}`);
                 })
 
-            const filteredDatalist = customizedDatalist.filter(optionValue => optionValue.split(' - ')[0] == this.zipCode);
+            const zipCode = this.INPUTFIELD.ZIPCODE.value;
+            const filteredDatalist = customizedDatalist.filter(optionValue => optionValue.split(' - ')[0] == zipCode);
 
             if (filteredDatalist.length == 1) {
                 const option = filteredDatalist[0];
@@ -249,10 +261,7 @@ class AddressWidget extends HTMLElement {
                     const zipCode = value.split(' - ')[0];
                     const length = zipCode.length;
 
-                    // Binding
-                    this.zipCode = zipCode;
-
-                    if (length == 3 || length == 4) this.synchronizeDatalistCities();
+                    if (length == 3 || length == 4) this.synchronizeDatalistCities(zipCode);
                     else if (length == 5) this.autofillCity();
                     else this.clearDatalist(this.DATALIST.CITIES);
                 });
