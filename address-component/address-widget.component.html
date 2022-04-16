@@ -1,0 +1,58 @@
+<div class="container">
+    <h2>Ad­res­se</h2>
+
+    <div>
+        <label for="zip-code">PLZ</label>
+
+        <input 
+        type="text" 
+        id="zip-code" 
+        name="zipCode" 
+        list="suggestions-cities" 
+        placeholder="12345"
+        onkeypress="if(this.value.length < 5) return (/^[0-9]$/.test(event.key)); else return false">
+
+        <datalist id="suggestions-cities">
+            <!-- Generating options by JS-->
+        </datalist>
+    </div>
+
+    <div>
+        <label for="city">Stadt</label>
+
+        <input 
+        type="text" 
+        id="city" 
+        name="city" 
+        placeholder="Musterstadt"
+        onkeypress="return (!/^[0-9]$/.test(event.key))" maxlength="32">
+    </div>
+
+    <div>
+        <label for="street">Straße</label>
+
+        <input 
+        type="text" 
+        id="street" 
+        name="street" 
+        list="suggestions-streets" 
+        placeholder="Musterstraße" 
+        onkeypress="return (!/^[0-9]$/.test(event.key))" 
+        maxlength="50">
+
+        <datalist id="suggestions-streets"></datalist>
+    </div>
+
+    <div>
+        <label for="house-number">Hausnummer</label>
+        <input type="text" id="house-number" name="houseNumber" placeholder="86f" maxlength="15">
+    </div>
+
+    <div>
+        <label for="country">Land</label>
+        <input type="text" id="country" name="country" value="Deutschland" readonly>
+    </div>
+
+    <button type="button" id="info-button">Info</button>
+
+</div>

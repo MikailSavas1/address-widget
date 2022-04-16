@@ -1,3 +1,6 @@
-console.log('Hello World! says "app.js"');
+import { AddressWidget } from "./address-component/address-widget.component.js"
 
-const externalSourcePath = 'https://cors-anywhere.herokuapp.com/https://www.postdirekt.de/plzserver/PlzAjaxServlet';
+window.customElements.define('address-widget', AddressWidget);
+window.customElements.whenDefined('address-widget').then(() => {
+    console.log('address-widget defined');
+})
