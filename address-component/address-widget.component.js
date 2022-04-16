@@ -5,9 +5,8 @@ export class AddressWidget extends HTMLElement {
     EXTERNAL_SOURCE_PATH = {
         css: '/address-component/address-widget.component.css'
     }
-
-    REST_API = '//www.postdirekt.de/plzserver/PlzAjaxServlet';
-    REST_API_WITH_CORS_ACCESS = 'https://cors-anywhere.herokuapp.com/https://www.postdirekt.de/plzserver/PlzAjaxServlet';
+    
+    REST_API = 'https://cors-anywhere.herokuapp.com/https://www.postdirekt.de/plzserver/PlzAjaxServlet';
 
     INPUTFIELD;
     DATALIST;
