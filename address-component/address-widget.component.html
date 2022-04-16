@@ -24,8 +24,11 @@
         type="text" 
         id="city" 
         name="city" 
+        list="suggestions-districts"
         placeholder="Musterstadt"
         onkeypress="return (!/^[0-9]$/.test(event.key))" maxlength="32">
+
+        <datalist id="suggestions-districts"></datalist>
     </div>
 
     <div>
