@@ -5,7 +5,7 @@ export class AddressWidget extends HTMLElement {
     EXTERNAL_SOURCE_PATH = {
         css: '/address-component/address-widget.component.css'
     }
-    
+
     REST_API = 'https://cors-anywhere.herokuapp.com/https://www.postdirekt.de/plzserver/PlzAjaxServlet';
 
     INPUTFIELD;
@@ -86,7 +86,6 @@ export class AddressWidget extends HTMLElement {
         // Clear datalist after choosen an item
         for (const opt of opts) {
             if (street == opt.value) {
-                this.clearDatalist(this.DATALIST.STREETS);
                 this.INPUTFIELD.HOUSENUMBER.focus();
             }
         }
@@ -108,10 +107,10 @@ export class AddressWidget extends HTMLElement {
                 const streetsRes = await this.fetchStreets(zipCode, city, district);
                 const streets = streetsRes.rows;
                 // Render
-                this.renderStreetsList(streets);
+                this.renderStreets(streets);
                 // Go ahead
-                this.clearDatalist(this.DATALIST.DISTRICTS);
                 this.INPUTFIELD.STREET.focus();
+                this.clearInputfield(this.INPUTFIELD.STREET);
             }
         }
     }
@@ -184,16 +183,16 @@ export class AddressWidget extends HTMLElement {
 
         const value = this.INPUTFIELD.ZIPCODE.value; // e.g. "78532 - Tuttlingen" || "78532"  --> SPLIT & SEPERATE DATA
 
-        // Initialize city
-        let city = value.split(' - ')[1] ? value.split(' - ')[1] : 'NONE CITY CHOOSEN FROM DATALIST';
-
         // Initialize zip-code
         const zipCode = value.split(' - ')[0];
         this.setZipCode(zipCode);
 
-        if (city == 'NONE CITY CHOOSEN FROM DATALIST') {
+        // Initialize city
+        let city = value.split(' - ')[1]; // :string || undefined
 
-            let customizedDatalist = []; // :string[] e.g. ['78532 - Tuttlingen']
+        if (!city) {
+
+            let customizedDatalist = [];
             this
                 .DATALIST
                 .CITIES
@@ -201,24 +200,21 @@ export class AddressWidget extends HTMLElement {
                 .forEach(item => {
                     const zipCode = item.value.split(' - ')[0];
                     const city = item.value.split(' - ')[1];
-                    customizedDatalist.push(`${zipCode} - ${city}`);
+                    customizedDatalist.push(`${zipCode} - ${city}`); // :string[] e.g. ['78532 - Tuttlingen', ...]
                 })
 
-            const zipCode = this.INPUTFIELD.ZIPCODE.value;
             const filteredDatalist = customizedDatalist.filter(optionValue => optionValue.split(' - ')[0] == zipCode);
 
             // DETECT, WHETHER DATALIST (OF CITIES) IS DISPLAYING EXACTLY 1 OPTION. ONLY THEN AUTOCOMPLETE
             if (filteredDatalist.length == 1) {
-                const option = filteredDatalist[0];
-                // Initialize city
-                city = option.split(' - ')[1];
+                const optionValue = filteredDatalist[0];
+                city = optionValue.split(' - ')[1];
                 this.clearDatalist(this.DATALIST.CITIES);
-            } else city = 'MULTIPLE CHOOSEABLE CITIES UNDER SAME ZIPCODE OR NONE CITY FOUND';
+            }
 
         } else this.clearDatalist(this.DATALIST.CITIES);
 
-        if (city != 'MULTIPLE CHOOSEABLE CITIES UNDER SAME ZIPCODE OR NONE CITY FOUND') {
-            // DESTRICTS
+        if (city) {
             const cityRes = await this.fetchCities(zipCode);
 
             if (cityRes.city) {
@@ -236,49 +232,18 @@ export class AddressWidget extends HTMLElement {
                     const streetsRes = await this.fetchStreets(zipCode, city);
                     streets = streetsRes.rows;
                 }
-                this.renderStreetsList(streets);
+                this.renderStreets(streets);
                 this.INPUTFIELD.STREET.focus();
             }
         }
     }
 
-    renderCities(cities) {
-        // Clear
-        this.clearDatalist(this.DATALIST.CITIES);
-        // Append option(s) to datalist
-        cities.forEach(item => {
-            const zipCode = item.split(' - ')[0];
-            const city = item.split(' - ')[1];
-            const opt = document.createElement('option');
-            const splitString = ' - ';
-            opt.value = `${zipCode}${splitString}${city}`;
-            this.DATALIST.CITIES.append(opt);
-        })
+    setCity(city) {
+        this.INPUTFIELD.CITY.value = city;
     }
 
-    renderCityDistricts(destricts) {
-        this.clearDatalist(this.DATALIST.DISTRICTS);
-        destricts.forEach(districtObj => {
-            const opt = document.createElement('option');
-            const city = districtObj.city;
-            const district = districtObj.district;
-            opt.value = district;
-            opt.textContent = `${city} (${district})`;
-            this.DATALIST.DISTRICTS.append(opt);
-        })
-    }
-
-    renderStreetsList(streets) {
-        this.clearDatalist(this.DATALIST.STREETS);
-        streets.forEach(streetObj => {
-            const opt = document.createElement('option');
-            const street = streetObj.street;
-            const city = streetObj.city;
-            const zipCode = streetObj.plz;
-            opt.value = street;
-            opt.textContent = `${city} (${zipCode})`;
-            this.DATALIST.STREETS.append(opt);
-        })
+    setZipCode(zipCode) {
+        this.INPUTFIELD.ZIPCODE.value = zipCode;
     }
 
     clearDatalist(datalist) {
@@ -289,12 +254,31 @@ export class AddressWidget extends HTMLElement {
         inputfield.value = '';
     }
 
-    setCity(city) {
-        this.INPUTFIELD.CITY.value = city;
+    renderCities(cities) {
+        this.clearDatalist(this.DATALIST.CITIES);
+        cities.forEach(zipAndCity => { this.DATALIST.CITIES.innerHTML += this.generateCityOption(zipAndCity) });
     }
 
-    setZipCode(zipCode) {
-        this.INPUTFIELD.ZIPCODE.value = zipCode;
+    renderCityDistricts(destricts) {
+        this.clearDatalist(this.DATALIST.DISTRICTS);
+        destricts.forEach(district => { this.DATALIST.DISTRICTS.innerHTML += this.generateDistrictOption(district) });
+    }
+
+    renderStreets(streets) {
+        this.clearDatalist(this.DATALIST.STREETS);
+        streets.forEach(street => { this.DATALIST.STREETS.innerHTML += this.generateStreetOption(street) });
+    }
+
+    generateCityOption(zipAndCity) {
+        return `<option value="${zipAndCity}"></option>`;
+    }
+
+    generateDistrictOption(district) {
+        return `<option value="${district["district"]}">${district["city"]} (${district["district"]})</option>`;
+    }
+
+    generateStreetOption(street) {
+        return `<option value="${street["street"]}">${street["city"]} (${street["plz"]})</option>`;
     }
 
     /**
