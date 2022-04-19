@@ -60,7 +60,7 @@ export class AddressWidget extends HTMLElement {
 
                 this.INPUTFIELD.ZIPCODE.addEventListener('keyup', this.suggestCitiesByZipCode.bind(this));
                 this.INPUTFIELD.CITY.addEventListener('input', this.suggestStreetsByDistrict.bind(this));
-                this.INPUTFIELD.STREET.addEventListener('keyup', this.suggestStreetsByStreet.bind(this));
+                this.INPUTFIELD.STREET.addEventListener('keyup', this.jumpToHouseNumber.bind(this));
 
                 const INFO_BUTTON = this.shadowRoot.querySelector('button#info-button');
                 INFO_BUTTON.addEventListener('click', this.collectAddressData.bind(this));
@@ -78,16 +78,13 @@ export class AddressWidget extends HTMLElement {
         else this.clearDatalist(this.DATALIST.CITIES);
     }
 
-    async suggestStreetsByStreet() {
-
+    jumpToHouseNumber() {
+        
         const street = this.INPUTFIELD.STREET.value;
         const opts = this.DATALIST.STREETS.childNodes;
-
-        // Clear datalist after choosen an item
+        
         for (const opt of opts) {
-            if (street == opt.value) {
-                this.INPUTFIELD.HOUSENUMBER.focus();
-            }
+            if (street == opt.value) this.INPUTFIELD.HOUSENUMBER.focus();
         }
     }
 
